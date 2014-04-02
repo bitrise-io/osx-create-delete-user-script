@@ -18,20 +18,21 @@ me=$(basename $0)
 usage() {
   printf "
 Usage  
-  $me <username>
+  $me <username> <password>
 
 Note: Probably have to run with sudo
 "
-  #$me <username> [-home <path>] [-uid <id>] [-gid <id>] [-shell <path>]
+  #$me <username> <password> [-home <path>] [-uid <id>] [-gid <id>] [-shell <path>]
 }
 
 _create_user() {
   new_user="$1"
-  new_home="$2"
-  new_shell="$3"
-  new_uid="$4"
-  new_gid="$5"
-  new_name="$6"
+  new_psw="$2"
+  new_home="$3"
+  new_shell="$4"
+  new_uid="$5"
+  new_gid="$6"
+  new_name="$7"
 
   OSX_USER="/Users/$new_user"
   dscl . -create "${OSX_USER}" && \
@@ -39,7 +40,9 @@ _create_user() {
     dscl . -create "${OSX_USER}" UserShell "$new_shell" && \
     dscl . -create "${OSX_USER}" UniqueID "$new_uid" && \
     dscl . -create "${OSX_USER}" PrimaryGroupID "$new_gid" && \
+    dscl . -passwd "${OSX_USER}" "$new_psw" && \
     ( [ ! -z "$new_name" ] &&  dscl . -create "${OSX_USER}" RealName "$new_name" )
+
   return $?
 }
 
@@ -52,9 +55,15 @@ if [ -z "$1" ] ; then
   exit 0
 fi
 
+if [ -z "$2" ] ; then
+  usage
+  exit 0
+fi
+
 new_user="$1"
+new_psw="$2"
 new_shell=$DEFAULT_SHELL
-new_uid=$(($(dscl . -list /Users uid | sort -nk2 | tail -n 1 | awk '{print $2}')+1))
+new_uid=$(($(dscl . -list /Users uid | sort -nk2 | tail -n 1 | awk '{print $3}')+1))
 new_gid=${DEFAULT_GID}
 new_name="$new_user"
 home_base=$DEFAULT_HOME_BASE
@@ -63,7 +72,7 @@ new_group="${DEFAULT_GROUP}"
 
 
 [ "$_DEBUG_ON" ] && set -x
-_create_user "$new_user" "$new_home" "$new_shell" "$new_uid" "$new_gid" "$new_name"
+_create_user "$new_user" "$new_psw" "$new_home" "$new_shell" "$new_uid" "$new_gid" "$new_name"
 [ "$?" = 0 ] && mkdir -p "$new_home"
 
 if [ "$?" = 0 -a "$new_home" != "/" ] ; then
