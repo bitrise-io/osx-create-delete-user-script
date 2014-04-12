@@ -70,6 +70,11 @@ home_base=$DEFAULT_HOME_BASE
 new_home="${home_base}/$new_user"
 new_group="${DEFAULT_GROUP}"
 
+log "Creating user: $new_user"
+
+# make sure the user does not exists
+usertest="$(/usr/bin/dscl . -search /Users name "$new_user" 2>/dev/null)"
+if ! [[ -z "$usertest" ]]; then printf "\nUser already exists! : $new_user\n\n"; exit 1; fi
 
 [ "$_DEBUG_ON" ] && set -x
 _create_user "$new_user" "$new_psw" "$new_home" "$new_shell" "$new_uid" "$new_gid" "$new_name"
@@ -78,5 +83,7 @@ _create_user "$new_user" "$new_psw" "$new_home" "$new_shell" "$new_uid" "$new_gi
 if [ "$?" = 0 -a "$new_home" != "/" ] ; then
   chown -R "${new_user}:${new_group}" "${new_home}"
 fi
+
+log "Creating user: $new_user [done]"
 
 set +x

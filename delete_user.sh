@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#
 # cf. http://www.macos.utah.edu/documentation/authentication/dscl.html
 #
 # based on: http://superuser.com/questions/180144/how-can-i-delete-a-mac-os-x-snow-leopard-user-account-from-command-line
@@ -104,5 +105,7 @@ fi
 
 export IFS=$OIFS
 export PATH=$OPATH
+
+printf "\nDeleting user: $user [done]\n"
 
 exit 0
