@@ -34,6 +34,12 @@ _create_user() {
   new_gid="$6"
   new_name="$7"
 
+  # special user-group - used for total isolation
+  group_name="group-${new_name}"
+  sudo dscl . -create "/Groups/${group_name}"
+  sudo dscl . -append "/Groups/${group_name}" gid "${new_gid}"
+  # sudo dscl . -append /Groups/dba passwd "*"
+
   OSX_USER="/Users/$new_user"
   dscl . -create "${OSX_USER}" && \
     dscl . -create "${OSX_USER}" NFSHomeDirectory "$new_home" && \
@@ -42,6 +48,9 @@ _create_user() {
     dscl . -create "${OSX_USER}" PrimaryGroupID "$new_gid" && \
     dscl . -passwd "${OSX_USER}" "$new_psw" && \
     ( [ ! -z "$new_name" ] &&  dscl . -create "${OSX_USER}" RealName "$new_name" )
+
+  # special user-group - used for total isolation
+  dseditgroup -o edit -a "$new_user" -t user "$group_name"
 
   return $?
 }
@@ -63,12 +72,13 @@ fi
 new_user="$1"
 new_psw="$2"
 new_shell=$DEFAULT_SHELL
-new_uid=$(($(dscl . -list /Users uid | sort -nk2 | tail -n 1 | awk '{print $3}')+1))
-new_gid=${DEFAULT_GID}
+new_uid=$(($(dscl . -list /Users uid | sort -nk2 | tail -n 1 | awk '{print $2}')+1))
+new_gid=$(($(dscl . -list /Groups gid | sort -nk2 | tail -n 1 | awk '{print $2}')+1))
 new_name="$new_user"
 home_base=$DEFAULT_HOME_BASE
 new_home="${home_base}/$new_user"
-new_group="${DEFAULT_GROUP}"
+# special user-group - used for total isolation
+new_group="group-${new_name}"
 
 log "Creating user: $new_user"
 

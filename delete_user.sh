@@ -47,6 +47,10 @@ usertest="$(/usr/bin/dscl . -search /Users name "$user" 2>/dev/null)"
 if [[ -z "$usertest" ]]; then printf "\nUser does not exist: $user\n\n"; exit 1; fi 
 
 
+# delete user related group (used for isolation)
+$sudo /usr/bin/dscl . -delete "/Groups/group-$user"
+
+
 # get user's group memberships
 groups_of_user="$(/usr/bin/id -Gn $user)"
 
@@ -88,7 +92,6 @@ guid="$(/usr/bin/dscl . -read "/Users/$user" GeneratedUID | /usr/bin/awk '{print
 if [[ -f "/private/var/db/shadow/hash/$guid" ]]; then
    $sudo /bin/rm -f /private/var/db/shadow/hash/$guid
 fi
-
 
 # delete the user
 $sudo /usr/bin/dscl . -delete "/Users/$user"
